@@ -63,24 +63,28 @@ const $=id=>document.getElementById(id),a=$('a'),wave=$('wave'),wsvg=$('wsvg'),r
 let D=526.81;
 const f=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 // waveform: 64 rounded bars, mirrored around a centre line; nuqta diamonds mark each message
-const W=640,H=64,n=B.length,step=W/n,bw=step*.5,bars=[],marks=[];
-B.forEach((v,i)=>{const h=Math.max(3,v*H),r=document.createElementNS(NS,'rect');
- r.setAttribute('x',i*step+(step-bw)/2);r.setAttribute('y',(H-h)/2);r.setAttribute('width',bw);r.setAttribute('height',h);r.setAttribute('rx',bw/2);
- r.setAttribute('fill','rgba(246,244,238,.24)');wsvg.appendChild(r);bars.push(r)});
-CH.forEach(c=>{const x=c.t/D*W,p=document.createElementNS(NS,'path');
- p.setAttribute('d',`M${x} 70 l4.2 6 l-4.2 6 l-4.2 -6z`);p.setAttribute('fill','rgba(246,244,238,.35)');wsvg.appendChild(p);marks.push(p)});
+const W=640,H=64,n=B.length,step=W/n,bw=step*.5,marks=[];
+const mk=(tag,at)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);return e};
+const defs=mk('defs',{}),clip=mk('clipPath',{id:'played'}),cr=mk('rect',{x:0,y:0,width:0,height:H});clip.appendChild(cr);defs.appendChild(clip);wsvg.appendChild(defs);
+const base=mk('g',{fill:'rgba(246,244,238,.24)'}),fg=mk('g',{fill:'#F6F4EE','clip-path':'url(#played)'});
+B.forEach((v,i)=>{const h=Math.max(3,v*H),at={x:i*step+(step-bw)/2,y:(H-h)/2,width:bw,height:h,rx:bw/2};base.appendChild(mk('rect',at));fg.appendChild(mk('rect',at))});
+wsvg.appendChild(base);wsvg.appendChild(fg);
+CH.forEach(c=>{const x=c.t/D*W,p=mk('path',{d:`M${x} 70 l4.2 6 l-4.2 6 l-4.2 -6z`,fill:'rgba(246,244,238,.35)'});wsvg.appendChild(p);marks.push(p)});
 const PLAY='<path d="M8.5 5.5v13l10.5-6.5z"/>',PAUSE='<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>';
 $('play').onclick=()=>a.paused?a.play():a.pause();
 a.onplay=a.onpause=()=>{$('ico').innerHTML=a.paused?PLAY:PAUSE;$('play').setAttribute('aria-label',a.paused?'Play':'Pause')};
 a.onloadedmetadata=()=>{D=a.duration;$('dur').textContent=f(D)};
-let last=-2,lastB=-1;
-function draw(){const t=a.currentTime,p=t/D,k=Math.floor(p*n);
- if(k!==lastB){bars.forEach((r,i)=>r.setAttribute('fill',i<=k&&t>0?'#F6F4EE':'rgba(246,244,238,.24)'));lastB=k}
- ring.style.strokeDashoffset=C*(1-p);$('cur').textContent=f(t);wave.setAttribute('aria-valuenow',Math.floor(t));
+let last=-2,raf=0;
+function draw(){const t=a.currentTime,p=Math.min(t/D,1);
+ cr.setAttribute('width',(p*W).toFixed(2));ring.style.strokeDashoffset=(C*(1-p)).toFixed(2);
+ $('cur').textContent=f(t);wave.setAttribute('aria-valuenow',Math.floor(t));
  let c=-1;CH.forEach((x,i)=>{if(t>=x.t)c=i});
  if(c!==last){last=c;marks.forEach((m,i)=>m.setAttribute('fill',i===c?'#F6F4EE':i<c?'rgba(246,244,238,.6)':'rgba(246,244,238,.35)'));
   $('now').innerHTML=c<0?(t>0?'&nbsp;':'Tap play to listen'):'<b>'+CH[c].n+'</b>'}}
-a.ontimeupdate=draw;
+function loop(){draw();if(!a.paused)raf=requestAnimationFrame(loop)}
+a.addEventListener('play',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)});
+a.addEventListener('pause',()=>{cancelAnimationFrame(raf);draw()});
+a.addEventListener('seeked',draw);
 function seekAt(e){const r=wave.getBoundingClientRect();const x=Math.min(Math.max((e.clientX-r.left)/r.width,0),1);a.currentTime=x*D;draw()}
 let drag=false;
 wave.addEventListener('pointerdown',e=>{drag=true;wave.setPointerCapture(e.pointerId);seekAt(e)});
