@@ -13,10 +13,10 @@
 :root{--blue:#0F2A57;--deep:#0A1F44;--ink:#F6F4EE;--soft:rgba(246,244,238,.66);--line:rgba(246,244,238,.13)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--deep)}
-body{margin:0;min-height:100dvh;color:var(--ink);background:linear-gradient(180deg,#14336A 0%,var(--blue) 45%,var(--deep) 100%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Tahoma,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:440px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 22px calc(110px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}
-.calli{display:block;width:64px;height:auto;aspect-ratio:2280/2622;margin-bottom:18px}
-.hero{position:relative;width:min(80vw,320px);margin-bottom:46px}
+body{margin:0;height:100vh;height:100dvh;overflow:hidden;color:var(--ink);background:linear-gradient(180deg,#14336A 0%,var(--blue) 45%,var(--deep) 100%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Tahoma,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:440px;height:100%;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:center}
+.calli{display:block;flex:none;width:min(64px,8dvh);height:auto;aspect-ratio:2280/2622;margin-bottom:18px}
+.hero{position:relative;flex:none;width:min(80vw,320px,44dvh);margin-bottom:46px}
 .art{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:20px;box-shadow:0 20px 44px rgba(0,0,0,.38)}
 .play{position:absolute;left:50%;bottom:-36px;transform:translateX(-50%);width:72px;height:72px;border-radius:50%;border:0;background:var(--ink);color:var(--blue);display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.35);transition:transform .15s}
 .play:active{transform:translateX(-50%) scale(.94)}
@@ -42,17 +42,7 @@ ol{list-style:none;margin:0;padding:0;width:100%}
 .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--soft);flex:none}
 .row.on{color:var(--ink);font-weight:600}
 .row.on .dot{background:var(--ink);border-color:var(--ink)}
-.mini{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:416px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:16px;background:rgba(10,31,68,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.4);border:1px solid var(--line);transform:translateY(140%);transition:transform .25s ease}
-.mini.show{transform:none}
-.mini img{width:40px;height:40px;border-radius:8px;object-fit:cover}
-.mini .txt{flex:1;min-width:0}
-.mini .who{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini .bar{height:3px;border-radius:2px;background:rgba(246,244,238,.2);margin-top:7px;overflow:hidden}
-.mini .bar i{display:block;height:100%;width:0;background:var(--ink)}
-.mini button{width:44px;height:44px;border-radius:50%;border:0;background:var(--ink);color:var(--blue);display:grid;place-items:center;cursor:pointer;flex:none}
-.mini button svg{width:20px;height:20px}
-@media (prefers-reduced-motion:reduce){.mini,.play{transition:none}}
-</style>
+@media (prefers-reduced-motion:reduce){</style>
 </head>
 <body>
 <main>
@@ -66,35 +56,28 @@ ol{list-style:none;margin:0;padding:0;width:100%}
 <p class="hint" id="hint" aria-live="polite">Tap play to listen</p>
 <div class="prog"><input id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek"><div class="times"><span id="cur">0:00</span><span id="dur">8:46</span></div></div>
 </main>
-<div class="mini" id="mini" aria-hidden="true">
-<img src="cover.jpg" alt="">
-<div class="txt"><div class="who" id="mwho">Baba</div><div class="bar"><i id="mbar"></i></div></div>
-<button id="mplay" type="button" aria-label="Play" tabindex="-1"><svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></button>
-</div>
 <audio id="a" src="audio.mp3" preload="metadata"></audio>
 <script>
 const CH=[{"t": 11.0, "n": "Baba"}, {"t": 23.62, "n": "Negar"}, {"t": 84.95, "n": "Amir"}, {"t": 110.3, "n": "Mo"}, {"t": 146.39, "n": "Hannah"}, {"t": 157.93, "n": "Maman"}, {"t": 236.82, "n": "Hannah"}, {"t": 252.87, "n": "From Iman’s Heart"}];
 const $=id=>document.getElementById(id);
-const a=$('a'),seek=$('seek'),rows=[...document.querySelectorAll('.row')],mini=$('mini');
+const a=$('a'),seek=$('seek'),rows=[...document.querySelectorAll('.row')];
 const PLAY='<path d="M8 5.5v13l11-6.5z"/>',PAUSE='<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>';
 const f=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const toggle=()=>a.paused?a.play():a.pause();
-$('play').onclick=toggle; $('mplay').onclick=toggle;
+$('play').onclick=toggle;
 function icons(){const p=a.paused;document.querySelectorAll('.ico').forEach(i=>i.innerHTML=p?PLAY:PAUSE);
- $('play').setAttribute('aria-label',p?'Play':'Pause');$('mplay').setAttribute('aria-label',p?'Play':'Pause');}
+ $('play').setAttribute('aria-label',p?'Play':'Pause');}
 a.onplay=a.onpause=icons;
 a.onloadedmetadata=()=>$('dur').textContent=f(a.duration);
 let last=-1;
 a.ontimeupdate=()=>{const d=a.duration||526.8,t=a.currentTime,p=t/d*100;
- seek.value=p*10;seek.style.setProperty('--p',p+'%');$('mbar').style.width=p+'%';$('cur').textContent=f(t);
+ seek.value=p*10;seek.style.setProperty('--p',p+'%');$('cur').textContent=f(t);
  let k=-1;CH.forEach((c,i)=>{if(t>=c.t)k=i});
  if(k!==last){last=k;rows.forEach((r,i)=>r.classList.toggle('on',i===k));
-  const n=k<0?'':CH[k].n;$('mwho').textContent=n||'تولدت مبارک';
+  const n=k<0?'':CH[k].n;
   $('hint').innerHTML=k<0?(t>0?'Starting…':'Tap play to listen'):'Now: <b>'+n+'</b>';}};
 seek.oninput=()=>{const d=a.duration||526.8;a.currentTime=seek.value/1000*d;seek.style.setProperty('--p',seek.value/10+'%')};
 rows.forEach(r=>r.onclick=()=>{a.currentTime=CH[+r.dataset.i].t;a.play()});
-new IntersectionObserver(([e])=>{const s=!e.isIntersecting&&(a.currentTime>0);mini.classList.toggle('show',s);mini.setAttribute('aria-hidden',!s);$('mplay').tabIndex=s?0:-1}).observe($('play'));
-a.addEventListener('play',()=>{const r=$('play').getBoundingClientRect();const s=r.bottom<0||r.top>innerHeight;mini.classList.toggle('show',s)});
 if('mediaSession' in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:'تولدت مبارک نیلوفر',artist:'Family',album:'Happy Birthday, Niloufar',artwork:[{src:'cover.jpg',sizes:'800x800',type:'image/jpeg'}]});}
 </script>
 </body>
